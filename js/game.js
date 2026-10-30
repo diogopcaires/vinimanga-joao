@@ -48,7 +48,7 @@
   ];
   const ENDING = [
     ["DEPLOY 200 OK", "O Downtime virou log. A nuvem ficou verde."],
-    ["O Mestre fecha o quadro.", "Pandora guarda a cura. O Padre assina o commit."],
+    ["O Mestre fecha o quadro.", "Pandora guarda a cura. O Pastor assina o commit."],
     ["02:47 na Lifemed.", "As orelhas somem. O taco não volta com o João."],
     ["VINI: eu ainda sinto o peido.", "JOÃO: standup em cinco minutos.", "Fim do sprint."]
   ];

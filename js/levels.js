@@ -176,7 +176,7 @@ function crackNorth(g) {
           grid: makeGrid({ n: true, s: true, e: true, paint: function (g) { grass(g); crackEast(g); crackNorth(g); } }),
           exits: { n: "patio", s: "caixa", e: "coracao" },
           entities: [
-            { type: "sign", id: "sign_muro", x: 4, y: 4, name: "PLACA", lines: ["O norte está rachado. Vini aperta R de frente.", "O mesmo arroto abre a capela a leste. O Padre está lá."] }
+            { type: "sign", id: "sign_muro", x: 4, y: 4, name: "PLACA", lines: ["O norte está rachado. Vini aperta R de frente.", "O mesmo arroto abre a capela a leste. O Pastor está lá."] }
           ]
         },
         coracao: {
@@ -184,7 +184,7 @@ function crackNorth(g) {
           grid: makeGrid({ w: true, paint: grass }),
           exits: { w: "muro" },
           entities: [
-            { type: "npc", id: "npc_priest", sprite: "priest", name: "PADRE", short: "PADRE", color: "#ff5a4a", x: 10, y: 7, auto: true, heal: 2,
+            { type: "npc", id: "npc_priest", sprite: "priest", name: "PASTOR", short: "PASTOR", color: "#ff5a4a", x: 10, y: 7, auto: true, heal: 2,
               lines: [
                 "Eu guardo o commit que ninguém quer revisar.",
                 "O arroto abre o que está rachado. O taco abre o que está lacrado.",
