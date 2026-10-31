@@ -2,14 +2,41 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Vini Manga &amp; João — Code Adventure</title>
   <link rel="stylesheet" href="css/game.css">
 </head>
 <body>
   <div id="wrap">
-    <canvas id="c" width="640" height="584" tabindex="0"></canvas>
-    <p id="hint"><b>1</b> Vini &nbsp; <b>2</b> João &nbsp; <b>TAB</b> troca &nbsp; <b>ESPAÇO</b> peido ou taco &nbsp; <b>R</b> arroto / moto &nbsp; <b>E</b> falar / SQL / console &nbsp; <b>Q</b> objetivos &nbsp; <b>H</b> dica &nbsp; <b>M</b> música &nbsp; <b>ESC</b> pausa</p>
+    <div id="stage">
+      <canvas id="c" width="640" height="584" tabindex="0"></canvas>
+      <p id="hint"><b>1</b> Vini &nbsp; <b>2</b> João &nbsp; <b>TAB</b> troca &nbsp; <b>ESPAÇO</b> peido ou taco &nbsp; <b>R</b> arroto / moto &nbsp; <b>E</b> falar / SQL / console &nbsp; <b>Q</b> objetivos &nbsp; <b>H</b> dica &nbsp; <b>M</b> música &nbsp; <b>ESC</b> pausa</p>
+    </div>
+    <div id="pad">
+      <div id="pad-move">
+        <button type="button" data-key="arrowup" aria-label="Cima">▲</button>
+        <button type="button" data-key="arrowleft" aria-label="Esquerda">◀</button>
+        <button type="button" data-key="arrowdown" aria-label="Baixo">▼</button>
+        <button type="button" data-key="arrowright" aria-label="Direita">▶</button>
+      </div>
+      <div id="pad-acts">
+        <button type="button" data-key="enter" data-ui="go">JOGAR</button>
+        <button type="button" data-key="c" data-ui="cont">CONTINUAR</button>
+        <button type="button" data-key="k" data-ui="help">CONTROLES</button>
+        <button type="button" data-key="m" data-ui="m">MÚSICA</button>
+        <button type="button" data-key="tab" data-ui="swap">JOÃO</button>
+        <button type="button" data-key="space" data-ui="act">PEIDO</button>
+        <button type="button" data-key="r" data-ui="r">ARROTO</button>
+        <button type="button" data-key="e" data-ui="e">FALAR</button>
+        <button type="button" data-key="q" data-ui="q">MISSÃO</button>
+        <button type="button" data-key="h" data-ui="h">DICA</button>
+        <button type="button" data-key="escape" data-ui="pause">PAUSA</button>
+        <button type="button" data-key="enter" data-ui="ok">CONTINUAR</button>
+        <button type="button" data-key="escape" data-ui="back">VOLTAR</button>
+      </div>
+    </div>
   </div>
   <script src="js/audio.js"></script>
   <script src="js/draw.js"></script>

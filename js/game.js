@@ -1784,7 +1784,7 @@ function font(size) {
       ctx.fillText((flags[o.flag] ? "[x] " : "[ ] ") + o.text, 20, 66 + i * 12);
     });
     ctx.fillStyle = "#c8b48a";
-    ctx.fillText("ESC ou ENTER volta. H repete a dica do mestre.", 20, 248);
+    ctx.fillText(onMobile() ? "TOQUE em VOLTAR." : "ESC ou ENTER volta. H repete a dica do mestre.", 20, 248);
   }
 
   function drawGameOver() {
@@ -1796,7 +1796,7 @@ function font(size) {
     ctx.fillText("BUG CRÍTICO", 160, 90);
     ctx.fillStyle = "#f6f0e4";
     ctx.fillText("Os dois caíram no meio do sonho.", 160, 112);
-    ctx.fillText("ENTER tenta de novo nesta sala.", 160, 132);
+    ctx.fillText(onMobile() ? "TOQUE tenta de novo nesta sala." : "ENTER tenta de novo nesta sala.", 160, 132);
     ctx.textAlign = "left";
   }
 
@@ -1810,7 +1810,7 @@ function font(size) {
     ctx.textAlign = "center";
     wrap(level.card, 260).forEach(function (ln, i) { ctx.fillText(ln, 160, 150 + i * 12); });
     if ((time * 2 | 0) % 2 === 0) ctx.fillStyle = "#ffe08a";
-    ctx.fillText("ENTER", 160, 220);
+    ctx.fillText(onMobile() ? "TOQUE" : "ENTER", 160, 220);
     ctx.textAlign = "left";
   }
 
@@ -1826,7 +1826,7 @@ function font(size) {
     });
     if ((time * 2 | 0) % 2 === 0) {
       ctx.fillStyle = "#c8b48a";
-      ctx.fillText("ENTER", 160, 240);
+      ctx.fillText(onMobile() ? "TOQUE" : "ENTER", 160, 240);
     }
     ctx.textAlign = "left";
   }
@@ -1905,8 +1905,13 @@ function font(size) {
     font(8);
     ctx.textAlign = "center";
     ctx.fillStyle = "#fff4c8";
-    ctx.fillText("ENTER dorme no teclado", 160, 234);
-    ctx.fillText("C continua   K controles", 160, 246);
+    if (onMobile()) {
+      ctx.fillText("toque em JOGAR", 160, 234);
+      ctx.fillText("ou toque na tela", 160, 246);
+    } else {
+      ctx.fillText("ENTER dorme no teclado", 160, 234);
+      ctx.fillText("C continua   K controles", 160, 246);
+    }
     const saveData = readSave();
     if (saveData && saveData.level > 0) {
       ctx.fillStyle = "#fff2c4";
@@ -1937,7 +1942,7 @@ function font(size) {
       "Segure Q: objetivos e concluídas",
       "ESC pausa    M música",
       "",
-      "ENTER volta"
+      onMobile() ? "TOQUE em VOLTAR" : "ENTER volta"
     ];
     lines.forEach(function (ln, i) {
       ctx.fillStyle = i === 0 ? "#ffe08a" : "#f6f0e4";
@@ -2032,6 +2037,94 @@ function font(size) {
     if (mode === "play" && pressed.escape) mode = "pause";
   }
 
+  function onMobile() {
+    return document.body.classList.contains("mobile");
+  }
+
+  function detectMobile() {
+    const ua = navigator.userAgent || "";
+    const ipad = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+    const device = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua) || ipad;
+    const touchOnly = navigator.maxTouchPoints > 1 && window.matchMedia("(hover: none)").matches;
+    document.body.classList.toggle("mobile", !!(device || touchOnly));
+  }
+
+  function fitCanvas() {
+    if (!onMobile()) {
+      canvas.style.width = "";
+      canvas.style.height = "";
+      return;
+    }
+    const stage = document.getElementById("stage");
+    const availW = stage.clientWidth;
+    const availH = stage.clientHeight;
+    if (!availW || !availH) return;
+    const ratio = 640 / 584;
+    let w = availW;
+    let h = w / ratio;
+    if (h > availH) {
+      h = availH;
+      w = h * ratio;
+    }
+    canvas.style.width = Math.floor(w) + "px";
+    canvas.style.height = Math.floor(h) + "px";
+  }
+
+  const pad = document.getElementById("pad");
+  const virtual = new Map();
+  let virtualMode = mode;
+
+  function releaseVirtual() {
+    virtual.forEach(function (held) {
+      keys[held.key] = false;
+      held.btn.classList.remove("on");
+    });
+    virtual.clear();
+  }
+
+  function syncPad() {
+    if (!pad) return;
+    if (!onMobile()) {
+      pad.hidden = true;
+      return;
+    }
+    pad.hidden = false;
+    if (virtualMode !== mode) {
+      virtualMode = mode;
+      releaseVirtual();
+    }
+    const buttons = pad.querySelectorAll("button[data-ui]");
+    let names = ["ok"];
+    let menu = true;
+    if (mode === "title") {
+      names = ["go", "help", "m"];
+      const saveData = readSave();
+      if (saveData && saveData.level > 0) names.push("cont");
+    } else if (mode === "controls" || mode === "pause") {
+      names = ["back", "m"];
+    } else if (mode === "sql") {
+      menu = false;
+      names = ["ok", "back"];
+    } else if (mode === "play") {
+      menu = false;
+      names = ["swap", "act", "r", "e", "q", "h", "pause"];
+    }
+    buttons.forEach(function (btn) {
+      btn.hidden = names.indexOf(btn.dataset.ui) < 0;
+    });
+    const act = pad.querySelector('[data-ui="act"]');
+    const special = pad.querySelector('[data-ui="r"]');
+    const swap = pad.querySelector('[data-ui="swap"]');
+    const ok = pad.querySelector('[data-ui="ok"]');
+    if (act) act.textContent = active === "vini" ? "PEIDO" : "TACO";
+    if (special) special.textContent = active === "vini" ? "ARROTO" : "MOTO";
+    if (swap) swap.textContent = active === "vini" ? "JOÃO" : "VINI";
+    if (ok) ok.textContent = mode === "gameover" ? "TENTAR" : mode === "sql" ? "ESCOLHER" : "CONTINUAR";
+    document.getElementById("pad-move").hidden = menu;
+    pad.classList.toggle("menu", menu);
+    pad.classList.toggle("joao", active === "joao");
+  }
+
   function frame(t) {
     const dt = Math.min(0.033, last ? (t - last) / 1000 : 0.016);
     last = t;
@@ -2040,6 +2133,7 @@ function font(size) {
     if (exitLock > 0) exitLock -= dt;
     shake = Math.max(0, shake - dt * 18);
     A.tick();
+    syncPad();
     handleModes();
     if (mode === "dialogue" && dialogue) dialogue.shown += dt * 46;
     if (mode === "play" && !blockPlay && !keys.q) updatePlay(dt);
@@ -2071,11 +2165,60 @@ function font(size) {
     const k = e.key === " " ? "space" : e.key === "Escape" ? "escape" : e.key === "Tab" ? "tab" : e.key === "Enter" ? "enter" : e.key.toLowerCase();
     keys[k] = false;
   });
-  canvas.addEventListener("mousedown", function () {
-    pressed.enter = true;
+  let canvasTap = null;
+  canvas.addEventListener("pointerdown", function (e) {
+    if (e.button != null && e.button !== 0) return;
+    canvasTap = { id: e.pointerId, x: e.clientX, y: e.clientY };
     A.unlock();
     canvas.focus();
   });
+  canvas.addEventListener("pointerup", function (e) {
+    if (!canvasTap || canvasTap.id !== e.pointerId) return;
+    const dx = e.clientX - canvasTap.x;
+    const dy = e.clientY - canvasTap.y;
+    canvasTap = null;
+    if (dx * dx + dy * dy > 324) return;
+    pressed.enter = true;
+  });
+  canvas.addEventListener("pointercancel", function () { canvasTap = null; });
+
+  if (pad) {
+    pad.addEventListener("pointerdown", function (e) {
+      const btn = e.target.closest("#pad button");
+      if (!btn || btn.hidden || (e.button != null && e.button !== 0)) return;
+      e.preventDefault();
+      try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+      virtual.set(e.pointerId, { key: btn.dataset.key, btn: btn });
+      keys[btn.dataset.key] = true;
+      pressed[btn.dataset.key] = true;
+      btn.classList.add("on");
+      A.unlock();
+    });
+    function releasePointer(e) {
+      const held = virtual.get(e.pointerId);
+      if (!held) return;
+      virtual.delete(e.pointerId);
+      let still = false;
+      virtual.forEach(function (other) {
+        if (other.key === held.key) still = true;
+      });
+      if (!still) keys[held.key] = false;
+      held.btn.classList.remove("on");
+    }
+    pad.addEventListener("pointerup", releasePointer);
+    pad.addEventListener("pointercancel", releasePointer);
+    pad.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  }
+
+  document.addEventListener("touchmove", function (e) {
+    if (onMobile()) e.preventDefault();
+  }, { passive: false });
+
+  detectMobile();
+  fitCanvas();
+  window.addEventListener("resize", fitCanvas);
+  window.addEventListener("orientationchange", function () { setTimeout(fitCanvas, 80); });
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", fitCanvas);
 
   A.song("title");
   requestAnimationFrame(frame);
