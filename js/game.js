@@ -2031,7 +2031,12 @@ function font(size) {
       return;
     }
     if (mode === "pause") {
-      if (pressed.escape || pressed.enter) mode = "play";
+      if (pressed.h && level && level.hint) {
+        mode = "play";
+        startDialogue(level.hint.map(function (text) {
+          return { name: "DICA", text: text, sprite: level.theme === "crypt" ? "sqlmaster" : level.theme === "tower" ? "frontend" : "master" };
+        }));
+      } else if (pressed.escape || pressed.enter) mode = "play";
       return;
     }
     if (mode === "play" && pressed.escape) mode = "pause";
@@ -2071,8 +2076,20 @@ function font(size) {
   }
 
   const pad = document.getElementById("pad");
+  const stick = document.getElementById("stick");
+  const knob = document.getElementById("stick-knob");
   const virtual = new Map();
   let virtualMode = mode;
+  let stickPtr = null;
+
+  function resetStick() {
+    stickPtr = null;
+    if (knob) knob.style.transform = "";
+    keys.arrowleft = false;
+    keys.arrowright = false;
+    keys.arrowup = false;
+    keys.arrowdown = false;
+  }
 
   function releaseVirtual() {
     virtual.forEach(function (held) {
@@ -2080,6 +2097,31 @@ function font(size) {
       held.btn.classList.remove("on");
     });
     virtual.clear();
+    resetStick();
+  }
+
+  function moveStick(e) {
+    const rect = stick.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    let dx = e.clientX - cx;
+    let dy = e.clientY - cy;
+    const max = rect.width * 0.28;
+    const dist = Math.hypot(dx, dy) || 1;
+    const clamped = Math.min(dist, max);
+    knob.style.transform = "translate(" + (dx / dist * clamped) + "px," + (dy / dist * clamped) + "px)";
+    const nx = dx / max;
+    const ny = dy / max;
+    const next = {
+      arrowleft: nx < -0.28,
+      arrowright: nx > 0.28,
+      arrowup: ny < -0.28,
+      arrowdown: ny > 0.28
+    };
+    ["arrowleft", "arrowright", "arrowup", "arrowdown"].forEach(function (k) {
+      if (next[k] && !keys[k]) pressed[k] = true;
+      keys[k] = next[k];
+    });
   }
 
   function syncPad() {
@@ -2093,36 +2135,32 @@ function font(size) {
       virtualMode = mode;
       releaseVirtual();
     }
-    const buttons = pad.querySelectorAll("button[data-ui]");
+    const buttons = pad.querySelectorAll("[data-ui]");
     let names = ["ok"];
-    let menu = true;
     if (mode === "title") {
       names = ["go", "help", "m"];
       const saveData = readSave();
       if (saveData && saveData.level > 0) names.push("cont");
-    } else if (mode === "controls" || mode === "pause") {
+    } else if (mode === "controls") {
       names = ["back", "m"];
+    } else if (mode === "pause") {
+      names = ["back", "m", "h"];
     } else if (mode === "sql") {
-      menu = false;
-      names = ["ok", "back"];
+      names = ["stick", "ok", "back"];
     } else if (mode === "play") {
-      menu = false;
-      names = ["swap", "act", "r", "e", "q", "h", "pause"];
+      names = ["stick", "swap", "act", "r", "e", "pause"];
     }
     buttons.forEach(function (btn) {
       btn.hidden = names.indexOf(btn.dataset.ui) < 0;
     });
     const act = pad.querySelector('[data-ui="act"]');
     const special = pad.querySelector('[data-ui="r"]');
-    const swap = pad.querySelector('[data-ui="swap"]');
     const ok = pad.querySelector('[data-ui="ok"]');
-    if (act) act.textContent = active === "vini" ? "PEIDO" : "TACO";
-    if (special) special.textContent = active === "vini" ? "ARROTO" : "MOTO";
-    if (swap) swap.textContent = active === "vini" ? "JOÃO" : "VINI";
+    if (act) act.setAttribute("aria-label", active === "vini" ? "Peido" : "Taco");
+    if (special) special.setAttribute("aria-label", active === "vini" ? "Arroto" : "Moto");
     if (ok) ok.textContent = mode === "gameover" ? "TENTAR" : mode === "sql" ? "ESCOLHER" : "CONTINUAR";
-    document.getElementById("pad-move").hidden = menu;
-    pad.classList.toggle("menu", menu);
     pad.classList.toggle("joao", active === "joao");
+    pad.classList.toggle("sql", mode === "sql");
   }
 
   function frame(t) {
@@ -2181,6 +2219,27 @@ function font(size) {
     pressed.enter = true;
   });
   canvas.addEventListener("pointercancel", function () { canvasTap = null; });
+
+  if (stick) {
+    stick.addEventListener("pointerdown", function (e) {
+      if (stick.hidden || (e.button != null && e.button !== 0)) return;
+      e.preventDefault();
+      stickPtr = e.pointerId;
+      try { stick.setPointerCapture(e.pointerId); } catch (err) {}
+      moveStick(e);
+      A.unlock();
+    });
+    stick.addEventListener("pointermove", function (e) {
+      if (e.pointerId !== stickPtr) return;
+      moveStick(e);
+    });
+    function endStick(e) {
+      if (e.pointerId !== stickPtr) return;
+      resetStick();
+    }
+    stick.addEventListener("pointerup", endStick);
+    stick.addEventListener("pointercancel", endStick);
+  }
 
   if (pad) {
     pad.addEventListener("pointerdown", function (e) {
